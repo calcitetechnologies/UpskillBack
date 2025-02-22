@@ -1,7 +1,7 @@
 // routes/socialAuth.js
 const express = require('express');
 const router = express.Router();
-const User = require('../Models/user'); 
+const User = require('../Models/User'); 
 
 const upsertSocialUser = async (provider, payload) => {
   const { tokenResponse, userInfo, email, username } = payload;
