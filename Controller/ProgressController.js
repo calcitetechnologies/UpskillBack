@@ -1,4 +1,4 @@
-const User = require("../Models/user");
+const User = require("../Models/User");
 const UserProgress = require("../Models/userProgress");
 const Module = require("../Models/Module");
 const Section = require("../Models/Section");

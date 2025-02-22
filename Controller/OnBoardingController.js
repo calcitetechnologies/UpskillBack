@@ -1,4 +1,4 @@
-const User = require("../Models/user");
+const User = require("../Models/User");
 const Onboarding = require("../Models/Onboarding");
 
 const createOnBoarding = async (req, res) => {

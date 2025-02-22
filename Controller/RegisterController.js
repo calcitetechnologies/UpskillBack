@@ -1,5 +1,5 @@
 const Admin = require("../Models/Admin");
-const User = require("../Models/user");
+const User = require("../Models/User");
 const UserProgress = require("../Models/userProgress"); 
 const bcrypt = require("bcrypt");
 
