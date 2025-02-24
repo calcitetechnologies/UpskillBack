@@ -14,16 +14,25 @@ const createTheme = async (req, res) => {
     }
 };
 
-// Get All Themes
 const getThemes = async (req, res) => {
     try {
-        const themes = await Theme.find();
+        const themes = await Theme.find() 
+            .populate({
+                path: "sections",
+                select: "name _id", 
+                populate: {
+                    path: "modules",
+                    select: "name _id", 
+                },
+            });
+
         res.status(200).json(themes);
     } catch (error) {
         console.error("Error retrieving themes:", error);
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
 
 // Get Single Theme
 const getThemeById = async (req, res) => {

@@ -1,50 +1,31 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-const userProgressSchema = new Schema(
+const UserProgressSchema = new Schema(
   {
-    user_id: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    points: {
-      type: Number,
-      default: 0,
-    },
-    level: {
-      type: Number,
-      default: 1,
-    },
+    user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    points: { type: Number, default: 0 },
+    module_points: { type: Number, default: 0 },
+    section_points: { type: Number, default: 0 },
+    theme_points: { type: Number, default: 0 },
+    level: { type: Number, default: 1 },
 
     theme_progress: [
       {
         theme_id: { type: Schema.Types.ObjectId, ref: "Theme" },
-        status: {
-          type: String,
-          enum: ["not_started", "in_progress", "completed"],
-          default: "not_started",
-        },
+        status: { type: String, enum: ["not_started", "in_progress", "completed"], default: "not_started" },
         completion_percentage: { type: Number, default: 0 },
         started_at: Date,
         completed_at: Date,
       },
     ],
 
-    skill_levels: [
+    section_progress: [
       {
-        skill_id: { type: Schema.Types.ObjectId, ref: "Skill" },
-        level: { type: Number, default: 1 },
-        experience_points: { type: Number, default: 0 },
-      },
-    ],
-
-    completed_videos: [
-      {
-        video_id: { type: Schema.Types.ObjectId, ref: "Video" },
-        watch_percentage: { type: Number, default: 0 },
-        quiz_completed: { type: Boolean, default: false },
-        quiz_score: { type: Number },
+        section_id: { type: Schema.Types.ObjectId, ref: "Section" },
+        status: { type: String, enum: ["not_started", "in_progress", "completed"], default: "not_started" },
+        completion_percentage: { type: Number, default: 0 },
+        started_at: Date,
         completed_at: Date,
       },
     ],
@@ -53,17 +34,40 @@ const userProgressSchema = new Schema(
       {
         module_id: { type: Schema.Types.ObjectId, ref: "Module" },
         completed_at: Date,
+        points_earned: { type: Number, default: 0 }
       },
     ],
 
-    badges: [
+    badges: [{ type: Schema.Types.ObjectId, ref: "Badge" }],
+
+    daily_points: [
       {
-        type: Schema.Types.ObjectId,
-        ref: "Badge",
-      },
+        date: { type: Date, required: true },
+        points: { type: Number, default: 0 },
+      }
     ],
+    weekly_points: [
+      {
+        weekStart: { type: Date, required: true },
+        weekEnd: { type: Date, required: true },
+        points: { type: Number, default: 0 },
+      }
+    ],
+    monthly_points: [
+      {
+        month: { type: String, required: true }, 
+        points: { type: Number, default: 0 },
+      }
+    ],
+
+    dailyStreak: { type: Number, default: 0 },
+    maxDailyStreak: { type: Number, default: 0 },
+    lastCompletionDate: { type: Date },
+    weeklyStreak: { type: Number, default: 0 },
+    maxWeeklyStreak: { type: Number, default: 0 },
+    consecutiveModules: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("UserProgress", userProgressSchema);
+module.exports = mongoose.model("UserProgress", UserProgressSchema);

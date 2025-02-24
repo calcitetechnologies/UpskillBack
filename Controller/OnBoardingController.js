@@ -49,19 +49,26 @@ const createOnBoarding = async (req, res) => {
 
 const retrieveData = async (req, res) => {
     try {
-        const user_id = req.user._id;
-
-        const onboardingData = await Onboarding.findOne({ user_id }).populate("user_id", "firstName lastName email");
-
-        if (!onboardingData) {
-            return res.status(404).json({ message: "Onboarding data not found" });
-        }
-
-        res.status(200).json(onboardingData);
+      const user_id = req.user._id;
+  
+      const onboardingData = await Onboarding.findOne({ user_id })
+        .populate("user_id", "username email");
+  
+      if (!onboardingData) {
+        return res.status(404).json({ message: "Onboarding data not found" });
+      }
+  
+      const data = onboardingData.toObject();
+  
+      data.username = data.user_id.username;
+      data.email = data.user_id.email;
+  
+      res.status(200).json(data);
     } catch (error) {
-        console.error("Error retrieving onboarding data:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+      console.error("Error retrieving onboarding data:", error);
+      res.status(500).json({ message: "Internal Server Error" });
     }
-};
+  };
+  
 
 module.exports = { createOnBoarding, retrieveData };

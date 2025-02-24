@@ -11,10 +11,6 @@ const ModuleSchema = new Schema({
     type: String,
     required: true,
   },
-  skill_id: {
-    type: Schema.Types.ObjectId,
-    ref: "Skill",
-  },
   video_id: {
     type: Schema.Types.ObjectId,
     ref: "Video",

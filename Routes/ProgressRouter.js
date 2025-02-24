@@ -7,5 +7,9 @@ router.post("/completeModule", authMiddleware, ProgressController.completeModule
 router.get("/modules", authMiddleware, ProgressController.getModuleProgress);
 router.get("/sections", authMiddleware, ProgressController.getSectionProgress);
 router.get("/themes", authMiddleware, ProgressController.getThemeProgress);
+router.get("/getAll",authMiddleware,ProgressController.getUserProgress);
+router.get("/weekly-points", authMiddleware, ProgressController.getUserWeeklyTotalPoints);
+router.get("/heatmap", authMiddleware, ProgressController.getUserDailyPointsHeat);
+
 
 module.exports = router;

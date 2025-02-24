@@ -19,6 +19,8 @@ const QuestionController=require("./Routes/QuestionRouter")
 const QuizController=require("./Routes/QuizRouter");
 const authMiddleware=require("./Routes/SocialAuthenticationRouter");
 const progressController=require("./Routes/ProgressRouter");
+const badgeRoutes = require("./Routes/BadgeRouter");
+const LearningController=require("./Routes/LearningRouter")
 
 app.use(express.json());
 app.use(cookieParser());
@@ -42,6 +44,9 @@ app.use("/video",VideoController);
 app.use("/question",QuestionController);
 app.use("/quiz", QuizController);
 app.use("/progress",progressController);
+app.use("/badges", badgeRoutes);
+app.use("/learning",LearningController)
+
 // Connect to MongoDB
 if (MODE === "development") {
   mongoose.connect(process.env.MONGO_URI);}

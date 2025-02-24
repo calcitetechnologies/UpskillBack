@@ -6,6 +6,10 @@ const BadgeSchema = new Schema({
     type: String,
     required: true,
   },
+  type:{
+    type:String,
+    required:true,
+  },
   description: {
     type: String,
     required: true,
@@ -17,6 +21,10 @@ const BadgeSchema = new Schema({
   points: {
     type: Number,
     required: true,
+  },
+  criteria:{
+    type:String,
+    required:true,
   },
   hidden: {
     type: Boolean,
