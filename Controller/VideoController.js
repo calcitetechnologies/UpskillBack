@@ -1,107 +1,87 @@
-const Video = require("../Models/Video");
-const Module = require("../Models/Module");
+const Video = require("../Models/Video");  
+const axios = require("axios");
+const iso8601 = require("iso8601-duration");
+require("dotenv").config();
 
-//  Create a new video
-const createVideo = async (req, res) => {
-    try {
-        const { title, video_url, description, module_id } = req.body;
+const API_KEY = process.env.YOUTUBE_API_KEY;
 
-        if (!title || !video_url || !description || !module_id) {
-            return res.status(400).json({ message: "Title, video URL, description, and module_id are required." });
-        }
-        const moduleExists = await Module.findById(module_id);
-        if (!moduleExists) {
-            return res.status(404).json({ message: "Module not found." });
-        }
-        const existingVideo = await Video.findOne({ module_id });
-        if (existingVideo) {
-            return res.status(400).json({ message: "A video already exists for this module." });
-        }
-        const newVideo = new Video({ title, video_url, description, module_id });
-        await newVideo.save();
-
-        moduleExists.video_id = newVideo._id;
-        await moduleExists.save();
-
-        res.status(201).json({ message: "Video created successfully", video: newVideo });
-    } catch (error) {
-        console.error(" Error creating video:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
+// Function to extract video ID from various YouTube URL formats
+const extractVideoId = (url) => {
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+  const match = url.match(regex);
+  return match ? match[1] : null;
 };
 
-//  Get All Videos
-const getVideos = async (req, res) => {
-    try {
-        const videos = await Video.find().populate("module_id", "name");
-        res.status(200).json(videos);
-    } catch (error) {
-        console.error(" Error retrieving videos:", error);
-        res.status(500).json({ message: "Internal Server Error" });
+// Controller Function to Fetch and Store YouTube Video Details
+const getVideoDetails = async (req, res) => {
+  try {
+    const { videoUrl } = req.body;
+
+    if (!videoUrl) {
+      return res.status(400).json({ error: "Video URL is required." });
     }
+
+    // Extract Video ID
+    const videoId = extractVideoId(videoUrl);
+
+    if (!videoId) {
+      return res.status(400).json({ error: "Invalid YouTube video URL." });
+    }
+
+    // Check if video exists in DB
+    const existingVideo = await Video.findOne({ video_id: videoId });
+    if (existingVideo) {
+      return res.status(200).json(existingVideo);
+    }
+
+    // Fetch video details from YouTube API
+    const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet,statistics,contentDetails&key=${API_KEY}`;
+    const response = await axios.get(apiUrl);
+    const data = response.data;
+
+    if (!data.items.length) {
+      return res.status(404).json({ error: "Video not found." });
+    }
+
+    const videoData = data.items[0];
+    const snippet = videoData.snippet;
+    const stats = videoData.statistics;
+    const content = videoData.contentDetails;
+
+    // Convert Duration (PT12M34S -> 12:34)
+    const duration = iso8601.parse(content.duration);
+    const formattedDuration = `${duration.minutes}:${duration.seconds}`;
+
+    // Calculate Engagement Score
+    const views = parseInt(stats.viewCount || 0);
+    const likes = parseInt(stats.likeCount || 0);
+    const comments = parseInt(stats.commentCount || 0);
+    const engagementScore = ((likes + comments) / (views || 1)) * 100;
+
+    // Save to Database
+    const newVideo = new Video({
+      video_id: videoId,
+      title: snippet.title,
+      description: snippet.description,
+      video_url: videoUrl,
+      channel_id: snippet.channelId,
+      channel_name: snippet.channelTitle,
+      likes_count: likes,
+      comments_count: comments,
+      views_count: views,
+      length: formattedDuration,
+      publish_date: snippet.publishedAt.split("T")[0],
+      category: snippet.categoryId,
+      engagement_score: engagementScore.toFixed(2),
+    });
+
+    await newVideo.save();
+    res.status(201).json(newVideo);
+    
+  } catch (error) {
+    console.error("Error fetching video details:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
-//  Get Video by  ID
-const getVideoById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const video = await Video.findById(id).populate("module_id", "name");
-        if (!video) {
-            return res.status(404).json({ message: "Video not found." });
-        }
-
-        res.status(200).json(video);
-    } catch (error) {
-        console.error(" Error retrieving video by ID:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-};
-
-
-// Update Video
-const updateVideo = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { title, video_url, description } = req.body;
-
-        const video = await Video.findById(id);
-        if (!video) {
-            return res.status(404).json({ message: "Video not found." });
-        }
-
-        if (title) video.title = title;
-        if (video_url) video.video_url = video_url;
-        if (description) video.description = description;
-
-        await video.save();
-
-        res.status(200).json({ message: "Video updated successfully", video });
-    } catch (error) {
-        console.error(" Error updating video:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-};
-
-
-
-//  Delete Video by ID
-const deleteVideo = async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const video = await Video.findById(id);
-        if (!video) {
-            return res.status(404).json({ message: "Video not found." });
-        }
-
-        await Module.findByIdAndUpdate(video.module_id, { $unset: { video_id: "" } });
-        await Video.findByIdAndDelete(id);
-
-        res.status(200).json({ message: "Video deleted successfully" });
-    } catch (error) {
-        console.error("  Error deleting video:", error);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-};
-
-module.exports = { createVideo, getVideos, getVideoById,updateVideo, deleteVideo };
+module.exports = { getVideoDetails };

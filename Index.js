@@ -47,6 +47,7 @@ app.use("/progress",progressController);
 app.use("/badges", badgeRoutes);
 app.use("/learning",LearningController)
 
+
 // Connect to MongoDB
 if (MODE === "development") {
   mongoose.connect(process.env.MONGO_URI);}
